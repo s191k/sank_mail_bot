@@ -3,7 +3,7 @@ from telebot import types
 from mail_ru_bot import mail_bot
 import telebot
 
-bot = telebot.TeleBot('841076232:AAGth6mQJwdJv8-peZYNYAWyf13J-H8vyts')
+bot = telebot.TeleBot('telegram bot key')
 global user_mail
 global user_password
 global message_chat  ##Для удобства, чтобы работать с чатом.
