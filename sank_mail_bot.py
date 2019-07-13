@@ -1,14 +1,18 @@
+import os
 import threading
 from telebot import types
 from mail_ru_bot import mail_bot
 import telebot
+import logging
 
-bot = telebot.TeleBot('telegram bot key')
-global user_mail
-global user_password
-global message_chat  ##Для удобства, чтобы работать с чатом.
-global mail_bot_r
+bot = telebot.TeleBot(os.environ.get('SANK_BOT_TELEGRAM'))
+# global user_mail
+# global user_password
+# global message_chat  ##Для удобства, чтобы работать с чатом.
+# global mail_bot_r
 
+logging.basicConfig(filename='sank_mail_bot_logs.log', level=logging.INFO,
+                    format='[%(asctime)s] %(levelname)s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):  ##Стандартное меню
@@ -140,7 +144,7 @@ def get_mail_subject_for_send_mail(message, mail_send_map):
 def get_mail_message_for_send_mail(message, mail_send_map):
     """ Получение сообщения почты из чата. """
     mail_message = message.text
-    mail_bot_r.send_mail(mail_send_map['mail_address'], mail_message)
+    mail_bot_r.send_mail(mail_send_map['mail_address'],mail_send_map['mail_subject'], mail_message.encode('utf-8'))
 
 
 def show_virtual_options(message):  ##message не используется???
@@ -185,27 +189,20 @@ def get_messages(message, amount_of_last_emails=None):
     bot.send_message(message.from_user.id, 'Вывод почты')
     try:  ## Могут быть проблемы с получением почты.
         data = mail_bot_r.get_mail_imap_inbox_all_mails(amount_of_last_emails)
-    except Exception as eexx:
-        # raise eexx
-        print(eexx)
+    except Exception as ex:
+        logging.error(message.from_user.id + ' : ' + ex)
         bot.send_message(message.chat.id, 'Ошибка получения почты.'
                                           ' Скорее всего неправильно указаны настройки почты.'
                                           ' Или серверы почты не отвечают.')
         return
-    count = 0
-    while True:
-        try:
-            print(data[1024 * count: 1024 * (count + 1)])
-            bot.send_message(message.from_user.id, data[1024 * count: 1024 * (count + 1)])
-            count += 1
-        except:
-            print('end')
-            break
+    all_messages_sizes = len(data)
+    for _ in range(int(all_messages_sizes/1024) + 1):
+        bot.send_message(message.from_user.id, data[1024 * _: 1024 * (_ + 1)])
 
 
 @bot.message_handler(content_types=['text'])
 def send_text(message):
-    """ Обработка любого текста.  Если текст не попадает под условия вышеописанных обработчиков, данный обработчик
+    """ Обработка любого текста. Если текст не попадает под условия вышеописанных обработчиков, данный обработчик
      перехватает весь текст и выводит сообщение с подсказкой. """
     bot.send_message(message.chat.id, 'Привет, для начала работы напиши /start')
 

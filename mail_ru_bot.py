@@ -46,16 +46,16 @@ class mail_bot:
             -Тело письма
         """
         result_answer = ''
-        if type(amount_of_last_emails) is list:  ## костыль - всегда передавать только int???
+        if isinstance(amount_of_last_emails,list):  ## костыль - всегда передавать только int???
             from_number = len(amount_of_last_emails) * (-1)
         else:
             from_number = amount_of_last_emails * (-1)
 
         # from_number = int(len(amount_of_last_emails)) * (-1) ## amount_of_last_emails возвращает номера писем, поэтому кастим в len
 
-        for _ in mails_numbers[from_number:][::-1]:
+        for mail_number in mails_numbers[from_number:][::-1]:
             ##Выдергиваем последние 5 значений, и сразу их переворачиваем, чтобы они отображались по дате писен сверху вниз(сверху новые, снизу старые).
-            status, data = impb.fetch(_, '(RFC822)')
+            status, data = impb.fetch(mail_number, '(RFC822)')
             email_message = email.message_from_bytes(data[0][1])
             result_answer += '\n'
             result_answer += ' '.join(
@@ -96,16 +96,19 @@ class mail_bot:
         """
         Декодим тему письма и приводим ее в обычный текст, т.к. тема письма приходит в нечитаемом виде.
         Если base=True, декодим с помощью base64.b64decode(_).decode(), иначе с помощью quopri.decodestring()
+
+        mail_subject мржет содержать несколько mail_subject_part  -->
         """
         result = ''
-        for _ in mail_subject.split(
+        print(mail_subject)
+        for mail_subject_part in mail_subject.split(
                 self._reg_exp_ignorecase('=\?UTF-8\?B\?', mail_subject)[0]
                 if base
                 else self._reg_exp_ignorecase('=\?UTF-8\?Q\?', mail_subject)[0]):
 
-            if len(_) < 1: continue
-            _ = _[:-2]  # Удаляем последние два символа - ?=
-            result += base64.b64decode(_).decode('utf-8') if base else quopri.decodestring(_.encode('utf-8')).decode(
+            if len(mail_subject_part) < 1: continue
+            mail_subject_part = mail_subject_part[:-2]  # Удаляем последние два символа - ?=
+            result += base64.b64decode(mail_subject_part).decode('utf-8') if base else quopri.decodestring(mail_subject_part.encode('utf-8')).decode(
                 'utf-8')
         return result
 
@@ -221,17 +224,17 @@ class mail_bot:
                            message_template.encode('utf-8'))
             # 'Добрый день, я получил Ваше сообщение. Отвечу Вам в ближайшее время.'.encode('utf-8'))
 
-    def _get_mail_pop3(self):  ## нужно?
-        """
-        Не реализованный код - т.к. неизвестно нужен ли и pop3 и imap одновременно.
-        Получение почты через POP3.
-        """
-        # print(self._get_mail_settings('imap'))
-        pop = poplib.POP3_SSL('pop.mail.ru', 995)
-        pop.user(self.email)
-        pop.pass_(self.password)
-        numMessages = len(pop.list()[1])
-        for i in range(numMessages):
-            for msg in pop.retr(i + 1)[1]:
-                print(msg)
-        pop.quit()
+    # def _get_mail_pop3(self):  ## нужно?
+    #     """
+    #     Не реализованный код - т.к. неизвестно нужен ли и pop3 и imap одновременно.
+    #     Получение почты через POP3.
+    #     """
+    #     # print(self._get_mail_settings('imap'))
+    #     pop = poplib.POP3_SSL('pop.mail.ru', 995)
+    #     pop.user(self.email)
+    #     pop.pass_(self.password)
+    #     numMessages = len(pop.list()[1])
+    #     for i in range(numMessages):
+    #         for msg in pop.retr(i + 1)[1]:
+    #             print(msg)
+    #     pop.quit()
