@@ -5,14 +5,15 @@ from mail_ru_bot import mail_bot
 import telebot
 import logging
 
-bot = telebot.TeleBot(os.environ.get('SANK_BOT_TELEGRAM'))
-# global user_mail
-# global user_password
-# global message_chat  ##Для удобства, чтобы работать с чатом.
-# global mail_bot_r
-
 logging.basicConfig(filename='sank_mail_bot_logs.log', level=logging.INFO,
                     format='[%(asctime)s] %(levelname)s %(message)s', datefmt='%Y.%m.%d %H:%M:%S')
+
+bot = telebot.TeleBot(os.environ.get('SANK_BOT_TELEGRAM'))
+global user_mail
+global user_password
+global message_chat  ##Для удобства, чтобы работать с чатом.
+global mail_bot_r
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_worker(call):  ##Стандартное меню
@@ -209,3 +210,5 @@ def send_text(message):
 
 if __name__ == '__main__':
     bot.polling()
+
+
