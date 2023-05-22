@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 required = [
     'pyTelegramBotAPI == 3.6.6',
-    'requests == 2.22.0'
+    'requests == 2.31.0'
 ]
 
 setup(
